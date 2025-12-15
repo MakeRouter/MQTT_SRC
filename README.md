@@ -1,22 +1,79 @@
 # MQTT_SRC
 One step closer to a smart router
 
-## 사용자 인식 ( user awareness.c )
+---
 
-- 사용자가 휴대폰으로 wifi 을 인식하면 5초 이내로 mqtt broker로 사용자의 휴대폰 정보를 전달함
-- 단, 등록된 사용자만 인식하고, 나머지는 무시
-- 이는 사용자가 어떻게 활용하는지에 따라 사용성이 무궁무진함.
-- ex) 내 휴대폰 인식 시, 내 컴퓨터의 노션 창을 띄워준다. ( 일정 관리를 노션으로 하기 때문에 유용하게 사용중 )
+## install mosquitto
 
-<img width="696" height="391" alt="image" src="https://github.com/user-attachments/assets/73e9e478-3fe2-40a2-bec6-cf17b0a0aeb5" />
+```
+opkg update
+opkg install mosquitto-ssl mosquitto-client-ssl
+```
+- mosquitto-ssl: MQTT 브로커 본체 (보안 기능 포함)
+- mosquitto-client-ssl: 테스트할 때 쓸 mosquitto_pub, mosquitto_sub 명령어 도구
 
+---
 
-## 컴퓨터에서 노션 열기 예시 ( 내가 사용중인 코드, win_notion.py)
+## Setting mosquitto
 
-- 사용자의 휴대폰이 인식되면 노션 열기
-- 이미 열려있는 경우 열지 않음
+```
+vi /etc/mosquitto/mosquitto.conf
 
-#### 추후 고민해볼 문제
-- 한번 연결한 경우 노션이 열리고 나서 이후 다음 날이 되어도 코드는 1회성인 문제,,
-- 새벽 6시 기준으로 상태 초기화 생각중,,
+# 포트 1883을 모든 IP에 대해 열기
+listener 1883
+
+# 익명 접속 차단
+allow_anonymous false
+
+# 비밀번호 파일 위치 지정
+password_file /etc/mosquitto/passwd
+
+# 비밀번호 권한 부여
+chmod 644 /etc/mosquitto/passwd
+
+```
+
+### Setting password
+
+```
+mosquitto_passwd -c /etc/mosquitto/passwd user
+```
+- 입력 후: Password: 라고 뜨면 비밀번호를 입력하고 엔터, Reenter password: 가 뜨면 한 번 더 입력하세요.
+- 참고: -c 옵션은 파일을 **새로 생성(Create)**한다는 뜻입니다. (기존 파일을 덮어쓰므로 주의!)
+- 만약 두 번째 사용자를 추가하고 싶다면 -c를 빼고 mosquitto_passwd /etc/mosquitto/passwd user2 처럼 입력하면 됩니다.
+
+---
+
+## Open Firewall
+
+```
+vi /etc/config/firewall
+
+config rule
+        option name             Allow-MQTT
+        option src              wan
+        option proto            tcp
+        option dest_port        1883
+        option target           ACCEPT
+
+```
+
+### restart firewall
+
+```
+/etc/init.d/firewall restart
+```
+
+---
+
+## MQTT enable & start
+
+```
+# 부팅 시 자동 실행 등록
+/etc/init.d/mosquitto enable
+
+# 지금 바로 실행
+/etc/init.d/mosquitto start
+```
+
 
