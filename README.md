@@ -76,4 +76,13 @@ config rule
 /etc/init.d/mosquitto start
 ```
 
+---
+## OpenWrt 내부에서 mqtt 관련 코드 돌릴 경우
+
+```
+opkg update
+
+opkg install libmosquitto
+
+```
 
